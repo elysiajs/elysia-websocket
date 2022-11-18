@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+    <head> </head>
+    <body>
+        <h1>Chatroom</h1>
+        <form id="sign-in">
+            <input type="text" name="name" placeholder="name" required />
+            <br />
+            <input type="text" name="room" placeholder="room" required />
+            <br />
+            <button type="submit">Enter</button>
+        </form>
+
+        <main id="app" style="display: none">
+            <form id="form">
+                <input type="text" placeholder="message" required />
+                <button type="submit">Send</button>
+            </form>
+            <form>
+                <fieldset>
+                    <legend>Chat</legend>
+                    <div id="mirror"></div>
+                </fieldset>
+            </form>
+        </main>
+    </body>
+    <script>
+        document
+            .getElementById('sign-in')
+            .addEventListener('submit', function (event) {
+                event.preventDefault()
+
+                const user = event.target[0].value
+                const room = event.target[1].value
+
+                const socket = new WebSocket(
+                    `ws://localhost:8080/ws/${room}/${user}`
+                )
+
+                const mirror = document.getElementById('mirror')
+
+                socket.addEventListener('open', function (event) {
+                    document.getElementById('sign-in').style.display = 'none'
+                    document.getElementById('app').style.display = 'block'
+                })
+
+                document
+                    .getElementById('form')
+                    .addEventListener('submit', function (event) {
+                        event.preventDefault()
+
+                        const input = event.target[0]
+
+                        socket.send(
+                            JSON.stringify({
+                                message: input.value
+                            })
+                        )
+
+                        input.value = ''
+                    })
+
+                socket.addEventListener('message', function (event) {
+                    const { user, message, time } = JSON.parse(event.data)
+
+                    const box = document.createElement('p')
+                    box.textContent = `${user}: ${message} | ${new Date(
+                        time
+                    ).toLocaleTimeString()}`
+
+                    mirror.prepend(box)
+                })
+            })
+    </script>
+</html>
