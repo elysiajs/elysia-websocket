@@ -2,7 +2,7 @@ import type { WebSocketHandler } from 'bun'
 
 import { KingWorld, getPath, type Context } from 'kingworld'
 import { Router } from 'kingworld/src/router'
-import { createValidationError } from 'kingworld/src/utils'
+import { createValidationError, getSchemaValidator } from 'kingworld/src/utils'
 
 import type { TSchema } from '@sinclair/typebox'
 
@@ -99,15 +99,6 @@ export const websocket = (
     return app
 }
 
-const getValidator = (schema: TSchema | undefined) => {
-    if (!schema) return
-
-    if (schema.type === 'object' && !('additionalProperties' in schema))
-        schema.additionalProperties = false
-
-    return TypeCompiler.Compile(schema)
-}
-
 KingWorld.prototype.ws = function (path, options) {
     if (!this.websocketRouter)
         throw new Error(
@@ -127,7 +118,7 @@ KingWorld.prototype.ws = function (path, options) {
                             : options.headers,
                     data: {
                         ...context,
-                        message: getValidator(options.schema?.message)
+                        message: getSchemaValidator(options.schema?.message)
                     } as KWWebSocket['data']
                 })
             )
