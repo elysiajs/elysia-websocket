@@ -9,7 +9,7 @@ const app = new KingWorld()
             ws.send(message)
         }
     })
-    // Simple chatroom
+    // Simple chatroom with custom room id and name
     .ws('/ws/:room/:name', {
         schema: {
             message: t.Object({

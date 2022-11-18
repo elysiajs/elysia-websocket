@@ -5,7 +5,6 @@ import { Router } from 'kingworld/src/router'
 import { createValidationError } from 'kingworld/src/utils'
 
 import type { TSchema } from '@sinclair/typebox'
-import { TypeCompiler } from '@sinclair/typebox/compiler'
 
 import type { KWWebSocket } from './types'
 import { mapWebSocketResponse } from './utils'
