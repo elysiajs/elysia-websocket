@@ -4,6 +4,7 @@ import { websocket } from '../src/index'
 const app = new KingWorld()
     .use(websocket)
     .get('/', () => Bun.file('./example/ws.html'))
+    // Simple WebSocket
     .ws('/ws', {
         message(ws, message) {
             ws.send(message)

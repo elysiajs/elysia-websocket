@@ -14,7 +14,9 @@ import { websocket } from '@kingworldjs/websocket'
 const app = new KingWorld()
     .use(websocket)
     .ws('/ws', {
-        message: () => "Hi"
+        message(ws, message) {
+            ws.message('Hi')
+        }
     })
     .listen(8080)
 ```
