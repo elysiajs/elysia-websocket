@@ -1,6 +1,6 @@
 {
   "name": "@kingworldjs/websocket",
-  "version": "0.0.0-experimental.3",
+  "version": "0.0.0-experimental.4",
   "description": "A plugin for kingworld that add support for websocket",
   "author": {
     "name": "saltyAom",

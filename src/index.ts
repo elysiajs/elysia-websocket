@@ -7,7 +7,6 @@ import { createValidationError, getSchemaValidator } from 'kingworld/src/utils'
 import type { TSchema } from '@sinclair/typebox'
 
 import type { KWWebSocket } from './types'
-import { mapWebSocketResponse } from './utils'
 
 /**
  * Register websocket config for KingWorld
