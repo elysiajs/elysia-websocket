@@ -26,7 +26,7 @@ import type { KWWebSocket } from './types'
  * ```
  */
 export const websocket =
-    (config: Omit<WebSocketHandler, 'open' | 'message' | 'close' | 'drain'>) =>
+    (config?: Omit<WebSocketHandler, 'open' | 'message' | 'close' | 'drain'>) =>
     (app: KingWorld) => {
         app.websocketRouter = new Router()
 

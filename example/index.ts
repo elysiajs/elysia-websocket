@@ -2,7 +2,7 @@ import { KingWorld, t } from 'kingworld'
 import { websocket } from '../src/index'
 
 const app = new KingWorld()
-    .use(websocket)
+    .use(websocket())
     .get('/', () => Bun.file('./example/ws.html'))
     // Simple WebSocket
     .ws('/ws', {

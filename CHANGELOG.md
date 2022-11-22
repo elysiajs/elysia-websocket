@@ -1,3 +1,7 @@
+# 0.0.0-experimental.6 - 22 Nov 2022
+Change:
+- Make config nullable
+
 # 0.0.0-experimental.5 - 22 Nov 2022
 Change:
 - Support for KingWorld 0.0.0-experimental.51
