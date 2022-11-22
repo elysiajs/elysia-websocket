@@ -18,85 +18,93 @@ import type { KWWebSocket } from './types'
  * import websocket from '@kingworldjs/websocket'
  *
  * const app = new KingWorld()
- *     .use(websocket)
+ *     .use(websocket())
  *     .ws('/ws', {
  *         message: () => "Hi"
  *     })
  *     .listen(8080)
  * ```
  */
-export const websocket = (
-    app: KingWorld,
-    config: Omit<WebSocketHandler, 'open' | 'message' | 'close' | 'drain'>
-) => {
-    app.websocketRouter = new Router()
+export const websocket =
+    (config: Omit<WebSocketHandler, 'open' | 'message' | 'close' | 'drain'>) =>
+    (app: KingWorld) => {
+        app.websocketRouter = new Router()
 
-    if (!app.config.serve)
-        app.config.serve = {
-            websocket: {
-                ...config,
-                open(ws) {
-                    if (!ws.data) return
+        if (!app.config.serve)
+            app.config.serve = {
+                websocket: {
+                    ...config,
+                    open(ws) {
+                        if (!ws.data) return
 
-                    const route = app.websocketRouter.find(
-                        getPath((ws?.data as unknown as Context).request.url)
-                    )?.store['ws']
-
-                    if (route && route.open) route.open(ws)
-                },
-                message(ws, message) {
-                    if (!ws.data) return
-
-                    const route = app.websocketRouter.find(
-                        getPath((ws?.data as unknown as Context).request.url)
-                    )?.store['ws']
-
-                    if (route && route.message) {
-                        try {
-                            message = JSON.parse(message.toString())
-                        } catch (error) {
-                            message = message.toString()
-                        }
-
-                        if (
-                            (ws.data as KWWebSocket['data']).message?.Check(
-                                message
-                            ) === false
-                        )
-                            return void ws.send(
-                                createValidationError(
-                                    'message',
-                                    (ws.data as KWWebSocket['data']).message,
-                                    message
-                                ).message
+                        const route = app.websocketRouter.find(
+                            getPath(
+                                (ws?.data as unknown as Context).request.url
                             )
+                        )?.store['ws']
 
-                        route.message(ws, message)
+                        if (route && route.open) route.open(ws)
+                    },
+                    message(ws, message) {
+                        if (!ws.data) return
+
+                        const route = app.websocketRouter.find(
+                            getPath(
+                                (ws?.data as unknown as Context).request.url
+                            )
+                        )?.store['ws']
+
+                        if (route && route.message) {
+                            try {
+                                message = JSON.parse(message.toString())
+                            } catch (error) {
+                                message = message.toString()
+                            }
+
+                            if (
+                                (ws.data as KWWebSocket['data']).message?.Check(
+                                    message
+                                ) === false
+                            )
+                                return void ws.send(
+                                    createValidationError(
+                                        'message',
+                                        (ws.data as KWWebSocket['data'])
+                                            .message,
+                                        message
+                                    ).message
+                                )
+
+                            route.message(ws, message)
+                        }
+                    },
+                    close(ws, code, reason) {
+                        if (!ws.data) return
+
+                        const route = app.websocketRouter.find(
+                            getPath(
+                                (ws?.data as unknown as Context).request.url
+                            )
+                        )?.store['ws']
+
+                        if (route && route.close) route.close(ws, code, reason)
+                    },
+                    drain(ws) {
+                        if (!ws.data) return
+
+                        const route = app.websocketRouter.find(
+                            getPath(
+                                (ws?.data as unknown as Context).request.url
+                            )
+                        )?.store['ws']
+
+                        if (route && route.drain) route.drain(ws)
                     }
-                },
-                close(ws, code, reason) {
-                    if (!ws.data) return
-
-                    const route = app.websocketRouter.find(
-                        getPath((ws?.data as unknown as Context).request.url)
-                    )?.store['ws']
-
-                    if (route && route.close) route.close(ws, code, reason)
-                },
-                drain(ws) {
-                    if (!ws.data) return
-
-                    const route = app.websocketRouter.find(
-                        getPath((ws?.data as unknown as Context).request.url)
-                    )?.store['ws']
-
-                    if (route && route.drain) route.drain(ws)
                 }
             }
-        }
 
-    return app
-}
+        return app
+    }
 
 KingWorld.prototype.ws = function (path, options) {
     if (!this.websocketRouter)
