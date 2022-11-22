@@ -12,7 +12,7 @@ import { KingWorld } from 'kingworld'
 import { websocket } from '@kingworldjs/websocket'
 
 const app = new KingWorld()
-    .use(websocket)
+    .use(websocket())
     .ws('/ws', {
         message(ws, message) {
             ws.message('Hi')
