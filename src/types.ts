@@ -55,6 +55,7 @@ export type KWWebSocket<
                   params: Record<ExtractKWPath<Path>, string>
               }
     > & {
+        id: string
         message: Schema['message'] extends undefined
             ? undefined
             : TypeCheck<NonNullable<Schema['message']>>

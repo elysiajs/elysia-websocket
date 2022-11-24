@@ -4,6 +4,8 @@ import { KingWorld, getPath, type Context } from 'kingworld'
 import { Router } from 'kingworld/src/router'
 import { createValidationError, getSchemaValidator } from 'kingworld/src/utils'
 
+import { nanoid } from 'nanoid'
+
 import type { TSchema } from '@sinclair/typebox'
 
 import type { KWWebSocket } from './types'
@@ -125,6 +127,7 @@ KingWorld.prototype.ws = function (path, options) {
                             : options.headers,
                     data: {
                         ...context,
+                        id: nanoid(),
                         message: getSchemaValidator(options.schema?.message)
                     } as KWWebSocket['data']
                 })

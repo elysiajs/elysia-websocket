@@ -1,3 +1,7 @@
+# 0.0.0-experimental.7 - 24 Nov 2022
+Feature:
+- Set identity
+
 # 0.0.0-experimental.6 - 22 Nov 2022
 Change:
 - Make config nullable
