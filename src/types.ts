@@ -1,7 +1,6 @@
 import type { ServerWebSocket, WebSocketHandler } from 'bun'
 
-import type { Context, TypedSchema } from 'kingworld'
-import type { HookHandler, UnwrapSchema } from 'kingworld'
+import type { Context, TypedSchema, HookHandler, UnwrapSchema } from 'kingworld'
 import type { Router } from 'kingworld/src/router'
 import type {
     ExtractKWPath,
@@ -44,7 +43,7 @@ export type WebSocketSchemaToTypedSchema<Schema extends WebSocketSchema> = {
     response: undefined
 }
 
-export type KWWebSocket<
+export type ElysiaWebSocket<
     Schema extends WebSocketSchema = WebSocketSchema,
     Path extends string = string
 > = ServerWebSocket<
@@ -84,8 +83,8 @@ export type WebSocketHeaderHandler<
           }
 >
 
-declare module 'kingworld' {
-    interface KingWorld {
+declare module 'elysia' {
+    interface Elysia {
         websocketRouter: Router
 
         ws<
@@ -118,7 +117,9 @@ declare module 'kingworld' {
                  *
                  * @param ws The {@link ServerWebSocket} that was opened
                  */
-                open?: (ws: KWWebSocket<Schema, Path>) => void | Promise<void>
+                open?: (
+                    ws: ElysiaWebSocket<Schema, Path>
+                ) => void | Promise<void>
 
                 /**
                  * Handle an incoming message to a {@link ServerWebSocket}
@@ -129,7 +130,7 @@ declare module 'kingworld' {
                  * To change `message` to be an `ArrayBuffer` instead of a `Uint8Array`, set `ws.binaryType = "arraybuffer"`
                  */
                 message?: (
-                    ws: KWWebSocket<Schema, Path>,
+                    ws: ElysiaWebSocket<Schema, Path>,
                     message: Schema['message'] extends NonNullable<
                         Schema['message']
                     >
@@ -143,7 +144,7 @@ declare module 'kingworld' {
                  * @param code The close code
                  * @param message The close message
                  */
-                close?: (ws: KWWebSocket<Schema, Path>) => any
+                close?: (ws: ElysiaWebSocket<Schema, Path>) => any
 
                 /**
                  * The {@link ServerWebSocket} is ready for more data
@@ -151,7 +152,7 @@ declare module 'kingworld' {
                  * @param ws The {@link ServerWebSocket} that is ready
                  */
                 drain?: (
-                    ws: KWWebSocket<Schema, Path>,
+                    ws: ElysiaWebSocket<Schema, Path>,
                     code: number,
                     reason: string
                 ) => any

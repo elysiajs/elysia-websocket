@@ -1,14 +1,13 @@
 import type { WebSocketHandler } from 'bun'
 
-import { KingWorld, getPath, type Context } from 'kingworld'
+import { Elysia, getPath, type Context } from 'elysia'
 import { Router } from 'kingworld/src/router'
 import { createValidationError, getSchemaValidator } from 'kingworld/src/utils'
 
 import { nanoid } from 'nanoid'
 
+import type { ElysiaWebSocket } from './types'
 import type { TSchema } from '@sinclair/typebox'
-
-import type { KWWebSocket } from './types'
 
 /**
  * Register websocket config for KingWorld
@@ -29,7 +28,7 @@ import type { KWWebSocket } from './types'
  */
 export const websocket =
     (config?: Omit<WebSocketHandler, 'open' | 'message' | 'close' | 'drain'>) =>
-    (app: KingWorld) => {
+    (app: Elysia) => {
         app.websocketRouter = new Router()
 
         if (!app.config.serve)
@@ -64,14 +63,14 @@ export const websocket =
                             }
 
                             if (
-                                (ws.data as KWWebSocket['data']).message?.Check(
-                                    message
-                                ) === false
+                                (
+                                    ws.data as ElysiaWebSocket['data']
+                                ).message?.Check(message) === false
                             )
                                 return void ws.send(
                                     createValidationError(
                                         'message',
-                                        (ws.data as KWWebSocket['data'])
+                                        (ws.data as ElysiaWebSocket['data'])
                                             .message,
                                         message
                                     ).message
@@ -108,7 +107,7 @@ export const websocket =
         return app
     }
 
-KingWorld.prototype.ws = function (path, options) {
+Elysia.prototype.ws = function (path, options) {
     if (!this.websocketRouter)
         throw new Error(
             "Can't find WebSocket. Please register WebSocket plugin first"
@@ -129,7 +128,7 @@ KingWorld.prototype.ws = function (path, options) {
                         ...context,
                         id: nanoid(),
                         message: getSchemaValidator(options.schema?.message)
-                    } as KWWebSocket['data']
+                    } as ElysiaWebSocket['data']
                 })
             )
                 return

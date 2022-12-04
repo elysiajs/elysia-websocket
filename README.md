@@ -1,5 +1,5 @@
 # @kingworldjs/websocket
-A plugin for [kingworld](https://github.com/saltyaom/kingworld) that add support for websocket.
+A plugin for [kingworld](https://github.com/elysiajs/elysia) that add support for websocket.
 
 ## Installation
 ```bash
