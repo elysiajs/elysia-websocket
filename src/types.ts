@@ -1,15 +1,13 @@
 import type { ServerWebSocket, WebSocketHandler } from 'bun'
 
-import type { Context, TypedSchema, HookHandler, UnwrapSchema } from 'kingworld'
-import type { Router } from 'kingworld/src/router'
+import type { Context, TypedSchema, HookHandler, UnwrapSchema } from 'elysia'
+import type { Router } from 'elysia/src/router'
 import type {
     ExtractKWPath,
-    Handler,
-    KingWorldInstance,
     TypedRoute,
     TypedSchemaToRoute,
     WithArray
-} from 'kingworld/src/types'
+} from 'elysia/src/types'
 
 import type { Static, TSchema } from '@sinclair/typebox'
 import type { TypeCheck } from '@sinclair/typebox/compiler'

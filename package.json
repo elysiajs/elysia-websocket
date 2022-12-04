@@ -1,6 +1,6 @@
 {
   "name": "@elysiajs/websocket",
-  "version": "0.0.0-experimental.7",
+  "version": "0.0.0-experimental.8",
   "description": "Plugin for Elysia that add support for websocket",
   "author": {
     "name": "saltyAom",
@@ -13,7 +13,7 @@
   "types": "src/index.ts",
   "typings": "src/index.ts",
   "keywords": [
-    "kingworld",
+    "elysia",
     "websocket"
   ],
   "homepage": "https://github.com/elysiajs/elysia-websocket",

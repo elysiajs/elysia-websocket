@@ -1,8 +1,8 @@
 import type { WebSocketHandler } from 'bun'
 
 import { Elysia, getPath, type Context } from 'elysia'
-import { Router } from 'kingworld/src/router'
-import { createValidationError, getSchemaValidator } from 'kingworld/src/utils'
+import { Router } from 'elysia/src/router'
+import { createValidationError, getSchemaValidator } from 'elysia/src/utils'
 
 import { nanoid } from 'nanoid'
 
@@ -10,15 +10,15 @@ import type { ElysiaWebSocket } from './types'
 import type { TSchema } from '@sinclair/typebox'
 
 /**
- * Register websocket config for KingWorld
+ * Register websocket config for Elysia
  *
  * ---
  * @example
  * ```typescript
- * import { KingWorld } from 'kingworld'
- * import websocket from '@kingworldjs/websocket'
+ * import { Elysia } from 'elysia'
+ * import { websocket } from '@elysiajs/websocket'
  *
- * const app = new KingWorld()
+ * const app = new Elysia()
  *     .use(websocket())
  *     .ws('/ws', {
  *         message: () => "Hi"
