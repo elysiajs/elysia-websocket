@@ -1,7 +1,7 @@
-import { KingWorld, t } from 'kingworld'
+import { Elysia, t } from 'elysia'
 import { websocket } from '../src/index'
 
-const app = new KingWorld()
+const app = new Elysia()
     .use(websocket())
     .get('/', () => Bun.file('./example/ws.html'))
     // Simple WebSocket

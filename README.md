@@ -1,17 +1,17 @@
-# @kingworldjs/websocket
-A plugin for [kingworld](https://github.com/elysiajs/elysia) that add support for websocket.
+# @elysiajs/websocket
+Plugin for [elysia](https://github.com/elysiajs/elysia) that add support for websocket.
 
 ## Installation
 ```bash
-bun add @kingworldjs/websocket
+bun add @elysiajs/websocket
 ```
 
 ## Example
 ```typescript
-import { KingWorld } from 'kingworld'
-import { websocket } from '@kingworldjs/websocket'
+import { Elysia } from 'elysia'
+import { websocket } from '@elysiajs/websocket'
 
-const app = new KingWorld()
+const app = new Elysia()
     .use(websocket())
     .ws('/ws', {
         message(ws, message) {
@@ -22,7 +22,7 @@ const app = new KingWorld()
 ```
 
 ## API
-This plugin extends `KingWorld` class with `ws` method.
+This plugin extends `Elysia` class with `ws` method.
 
 ## ws
 Register Websocket to route

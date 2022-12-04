@@ -1,6 +1,5 @@
-import { KingWorld } from 'kingworld'
-
-import websocket from '../src'
+import { Elysia } from 'elysia'
+import { websocket } from '../src'
 
 import { describe, expect, it } from 'bun:test'
 
