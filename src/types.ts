@@ -21,8 +21,8 @@ export type WebSocketSchema = Omit<TypedSchema, 'body' | 'response'> & {
 
 export type WebSocketSchemaToRoute<Schema extends WebSocketSchema> = {
     body: never
-    header: UnwrapSchema<Schema['header']> extends Record<string, any>
-        ? UnwrapSchema<Schema['header']>
+    headers: UnwrapSchema<Schema['headers']> extends Record<string, any>
+        ? UnwrapSchema<Schema['headers']>
         : undefined
     query: UnwrapSchema<Schema['query']> extends Record<string, any>
         ? UnwrapSchema<Schema['query']>
@@ -35,7 +35,7 @@ export type WebSocketSchemaToRoute<Schema extends WebSocketSchema> = {
 
 export type WebSocketSchemaToTypedSchema<Schema extends WebSocketSchema> = {
     body: undefined
-    header: Schema['header']
+    headers: Schema['header']
     query: Schema['query']
     params: Schema['params']
     response: undefined

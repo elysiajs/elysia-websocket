@@ -1,9 +1,13 @@
 import type { WebSocketHandler } from 'bun'
 
-import { Elysia, getPath, type Context } from 'elysia'
-import { Router } from 'elysia/src/router'
-import { createValidationError, getSchemaValidator } from 'elysia/src/utils'
-
+import {
+    Elysia,
+    getPath,
+    Router,
+    createValidationError,
+    getSchemaValidator,
+    type Context
+} from 'elysia'
 import { nanoid } from 'nanoid'
 
 import type { ElysiaWebSocket } from './types'
@@ -63,18 +67,19 @@ export const websocket =
                             }
 
                             if (
-                                (
+                                !(
                                     ws.data as ElysiaWebSocket['data']
-                                ).message?.Check(message) === false
-                            )
+                                ).message?.Check(message)
+                            ) {
                                 return void ws.send(
                                     createValidationError(
                                         'message',
                                         (ws.data as ElysiaWebSocket['data'])
                                             .message,
                                         message
-                                    ).message
+                                    ).cause as string
                                 )
+                            }
 
                             route.message(ws, message)
                         }
@@ -140,7 +145,7 @@ Elysia.prototype.ws = function (path, options) {
         {
             beforeHandle: options.beforeHandle,
             schema: {
-                header: options.schema?.header,
+                headers: options.schema?.headers,
                 params: options.schema?.params,
                 query: options.schema?.query
             }
