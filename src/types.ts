@@ -1,13 +1,18 @@
 import type { ServerWebSocket, WebSocketHandler } from 'bun'
 
-import type { Context, TypedSchema, HookHandler, UnwrapSchema } from 'elysia'
-import type { Router } from 'elysia/src/router'
 import type {
-    ExtractKWPath,
+    Context,
+    TypedSchema,
+    HookHandler,
+    UnwrapSchema,
+    Router
+} from 'elysia'
+import type {
+    ExtractPath,
     TypedRoute,
     TypedSchemaToRoute,
     WithArray
-} from 'elysia/src/types'
+} from 'elysia/dist/types'
 
 import type { Static, TSchema } from '@sinclair/typebox'
 import type { TypeCheck } from '@sinclair/typebox/compiler'
@@ -35,7 +40,7 @@ export type WebSocketSchemaToRoute<Schema extends WebSocketSchema> = {
 
 export type WebSocketSchemaToTypedSchema<Schema extends WebSocketSchema> = {
     body: undefined
-    headers: Schema['header']
+    headers: Schema['headers']
     query: Schema['query']
     params: Schema['params']
     response: undefined
@@ -46,10 +51,10 @@ export type ElysiaWebSocket<
     Path extends string = string
 > = ServerWebSocket<
     Context<
-        ExtractKWPath<Path> extends never
+        ExtractPath<Path> extends never
             ? WebSocketSchemaToRoute<Schema>
             : Omit<WebSocketSchemaToRoute<Schema>, 'params'> & {
-                  params: Record<ExtractKWPath<Path>, string>
+                  params: Record<ExtractPath<Path>, string>
               }
     > & {
         id: string
@@ -77,7 +82,7 @@ export type WebSocketHeaderHandler<
               },
               'params'
           > & {
-              params: Record<ExtractKWPath<Path>, string>
+              params: Record<ExtractPath<Path>, string>
           }
 >
 
