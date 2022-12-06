@@ -73,10 +73,11 @@ export const websocket =
                             }
 
                             if (
-                                !(
+                                (ws.data as ElysiaWebSocket['data']).message &&
+                                (
                                     ws.data as ElysiaWebSocket['data']
                                 ).message?.Check(message)
-                            ) {
+                            )
                                 return void ws.send(
                                     createValidationError(
                                         'message',
@@ -85,7 +86,6 @@ export const websocket =
                                         message
                                     ).cause as string
                                 )
-                            }
 
                             route.message(ws, message)
                         }
