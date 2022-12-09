@@ -1,3 +1,7 @@
+# 0.1.0-rc.4 - 9 Dec 2022
+Fix:
+- Add main fields Bundlephobia
+
 # 0.1.0-rc.3 - 6 Dec 2022
 Fix:
 - Empty validation

@@ -21,7 +21,7 @@ const app = new Elysia()
             const {
                 data: {
                     params: { room, name }
-                }
+                },
             } = ws
 
             ws.subscribe(room)
