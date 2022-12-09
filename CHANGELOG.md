@@ -1,4 +1,4 @@
-# 0.1.0-rc.4 - 9 Dec 2022
+# 0.1.0-rc.5 - 9 Dec 2022
 Fix:
 - Add main fields Bundlephobia
 
