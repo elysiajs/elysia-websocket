@@ -60,10 +60,11 @@ export const websocket =
                         )?.store['ws']
 
                         if (route && route.message) {
+                            message = message.toString()
+
                             try {
-                                message = JSON.parse(message.toString())
+                                message = JSON.parse(message)
                             } catch (error) {
-                                message = message.toString()
                             }
 
                             if (
@@ -83,6 +84,9 @@ export const websocket =
 
                             route.message(ws, message)
                         }
+
+                        // ? noImplicitReturns
+                        return undefined
                     },
                     close(ws, code, reason) {
                         if (!ws.data) return

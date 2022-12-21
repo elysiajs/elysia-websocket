@@ -1,3 +1,7 @@
+# 0.1.0-rc.8 - 20 Dec 2022
+Improvement:
+- reduce `message.toString()` to once
+
 # 0.1.0-rc.7 - 19 Dec 2022
 Bug fix:
 - set min version to 0.1.0-rc.9 to ensure type safety
