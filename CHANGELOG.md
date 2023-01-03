@@ -1,3 +1,11 @@
+# 0.2.0 - 3 Jan 2023
+Feature:
+- Type-safe WebSocket validation
+
+# 0.1.1 - 3 Jan 2023
+Feature:
+- Experimental support for Eden
+
 # 0.1.0-rc.8 - 20 Dec 2022
 Improvement:
 - reduce `message.toString()` to once

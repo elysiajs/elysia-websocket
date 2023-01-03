@@ -5,7 +5,6 @@ Bun.serve({
             ws.send(message)
         }
     },
-
     fetch(req, server) {
         if (server.upgrade(req))
             return

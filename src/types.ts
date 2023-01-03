@@ -11,21 +11,19 @@ import type {
     ExtractPath,
     TypedRoute,
     TypedSchemaToRoute,
-    WithArray
+    WithArray,
+    ElysiaRoute,
+    ElysiaInstance
 } from 'elysia/dist/types'
 
 import type { Static, TSchema } from '@sinclair/typebox'
 import type { TypeCheck } from '@sinclair/typebox/compiler'
+import { ElysiaWS } from '.'
 
-export type WebSocketSchema = Omit<TypedSchema, 'body' | 'response'> & {
-    /**
-     * Validate websocket incoming message
-     */
-    message?: TSchema
-}
-
-export type WebSocketSchemaToRoute<Schema extends WebSocketSchema> = {
-    body: never
+export type WebSocketSchemaToRoute<Schema extends TypedSchema> = {
+    body: UnwrapSchema<Schema['body']> extends Record<string, any>
+        ? UnwrapSchema<Schema['body']>
+        : undefined
     headers: UnwrapSchema<Schema['headers']> extends Record<string, any>
         ? UnwrapSchema<Schema['headers']>
         : undefined
@@ -35,19 +33,13 @@ export type WebSocketSchemaToRoute<Schema extends WebSocketSchema> = {
     params: UnwrapSchema<Schema['params']> extends Record<string, any>
         ? UnwrapSchema<Schema['params']>
         : undefined
-    response: undefined
+    response: UnwrapSchema<Schema['response']> extends Record<string, any>
+        ? UnwrapSchema<Schema['response']>
+        : undefined
 }
 
-export type WebSocketSchemaToTypedSchema<Schema extends WebSocketSchema> = {
-    body: undefined
-    headers: Schema['headers']
-    query: Schema['query']
-    params: Schema['params']
-    response: undefined
-}
-
-export type ElysiaWebSocket<
-    Schema extends WebSocketSchema = WebSocketSchema,
+export type ElysiaWSContext<
+    Schema extends TypedSchema = TypedSchema,
     Path extends string = string
 > = ServerWebSocket<
     Context<
@@ -58,9 +50,9 @@ export type ElysiaWebSocket<
               }
     > & {
         id: string
-        message: Schema['message'] extends undefined
+        message: Schema['body'] extends undefined
             ? undefined
-            : TypeCheck<NonNullable<Schema['message']>>
+            : TypeCheck<NonNullable<Schema['body']>>
     }
 >
 
@@ -91,8 +83,9 @@ declare module 'elysia' {
         websocketRouter: Router
 
         ws<
-            Schema extends WebSocketSchema = WebSocketSchema,
-            Path extends string = string
+            Schema extends TypedSchema = TypedSchema,
+            Path extends string = string,
+            Instance extends Elysia<any> = this
         >(
             /**
              * Path to register websocket to
@@ -103,17 +96,11 @@ declare module 'elysia' {
                 'open' | 'message' | 'close' | 'drain'
             > & {
                 schema?: Schema
-                beforeHandle?: WithArray<
-                    HookHandler<WebSocketSchemaToTypedSchema<Schema>>
-                >
+                beforeHandle?: WithArray<HookHandler<Schema>>
                 /**
                  * Headers to register to websocket before `upgrade`
                  */
-                 headers?:
-                    | HeadersInit
-                    | WebSocketHeaderHandler<
-                          WebSocketSchemaToTypedSchema<Schema>
-                      >
+                headers?: HeadersInit | WebSocketHeaderHandler<Schema>
 
                 /**
                  * The {@link ServerWebSocket} has been opened
@@ -121,7 +108,7 @@ declare module 'elysia' {
                  * @param ws The {@link ServerWebSocket} that was opened
                  */
                 open?: (
-                    ws: ElysiaWebSocket<Schema, Path>
+                    ws: ElysiaWS<ElysiaWSContext<Schema, Path>, Schema>
                 ) => void | Promise<void>
 
                 /**
@@ -133,11 +120,9 @@ declare module 'elysia' {
                  * To change `message` to be an `ArrayBuffer` instead of a `Uint8Array`, set `ws.binaryType = "arraybuffer"`
                  */
                 message?: (
-                    ws: ElysiaWebSocket<Schema, Path>,
-                    message: Schema['message'] extends NonNullable<
-                        Schema['message']
-                    >
-                        ? Static<NonNullable<Schema['message']>>
+                    ws: ElysiaWS<ElysiaWSContext<Schema, Path>, Schema>,
+                    message: Schema['body'] extends NonNullable<Schema['body']>
+                        ? Static<NonNullable<Schema['body']>>
                         : string
                 ) => any
 
@@ -147,7 +132,9 @@ declare module 'elysia' {
                  * @param code The close code
                  * @param message The close message
                  */
-                close?: (ws: ElysiaWebSocket<Schema, Path>) => any
+                close?: (
+                    ws: ElysiaWS<ElysiaWSContext<Schema, Path>, Schema>
+                ) => any
 
                 /**
                  * The {@link ServerWebSocket} is ready for more data
@@ -155,11 +142,19 @@ declare module 'elysia' {
                  * @param ws The {@link ServerWebSocket} that is ready
                  */
                 drain?: (
-                    ws: ElysiaWebSocket<Schema, Path>,
+                    ws: ElysiaWS<ElysiaWSContext<Schema, Path>, Schema>,
                     code: number,
                     reason: string
                 ) => any
             }
-        ): this
+        ): Instance extends Elysia<infer Instance>
+            ? ElysiaRoute<
+                  'subscribe',
+                  Schema,
+                  Instance,
+                  Path,
+                  Schema['response']
+              >
+            : this
     }
 }

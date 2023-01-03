@@ -1,4 +1,4 @@
-import type { WebSocketHandler } from 'bun'
+import type { ServerWebSocket, WebSocketHandler } from 'bun'
 
 import {
     Elysia,
@@ -6,12 +6,75 @@ import {
     Router,
     createValidationError,
     getSchemaValidator,
-    type Context
+    type Context,
+    type TypedSchema,
+    UnwrapSchema
 } from 'elysia'
 import { nanoid } from 'nanoid'
 
 import type { TSchema } from '@sinclair/typebox'
-import type { ElysiaWebSocket } from './types'
+import type { ElysiaWSContext } from './types'
+
+export class ElysiaWS<
+    WS extends ElysiaWSContext<any> = ElysiaWSContext,
+    Schema extends TypedSchema = TypedSchema
+> {
+    raw: WS
+    data: WS['data']
+    isSubscribed: WS['isSubscribed']
+
+    constructor(ws: WS) {
+        this.raw = ws
+        this.data = ws.data
+        this.isSubscribed = ws.isSubscribed
+    }
+
+    publish(
+        topic: string,
+        data: UnwrapSchema<Schema['response']>,
+        compress?: boolean
+    ) {
+        // @ts-ignore
+        if (typeof data === 'object') data = JSON.stringify(data)
+
+        this.raw.publish(topic, data as string, compress)
+
+        return this
+    }
+
+    send(data: UnwrapSchema<Schema['response']>) {
+        // @ts-ignore
+        if (typeof data === 'object') data = JSON.stringify(data)
+
+        this.raw.send(data as string)
+
+        return this
+    }
+
+    subscribe(room: string) {
+        this.raw.subscribe(room)
+
+        return this
+    }
+
+    unsubscribe(room: string) {
+        this.raw.unsubscribe(room)
+
+        return this
+    }
+
+    cork(callback: (ws: ServerWebSocket<any>) => any) {
+        this.raw.cork(callback)
+
+        return this
+    }
+
+    close() {
+        this.raw.close()
+
+        return this
+    }
+}
 
 /**
  * Register websocket config for Elysia
@@ -33,7 +96,7 @@ import type { ElysiaWebSocket } from './types'
 export const websocket =
     (config?: Omit<WebSocketHandler, 'open' | 'message' | 'close' | 'drain'>) =>
     (app: Elysia) => {
-        app.websocketRouter = new Router()
+        if (!app.websocketRouter) app.websocketRouter = new Router()
 
         if (!app.config.serve)
             app.config.serve = {
@@ -42,73 +105,85 @@ export const websocket =
                     open(ws) {
                         if (!ws.data) return
 
-                        const route = app.websocketRouter.find(
-                            getPath(
-                                (ws?.data as unknown as Context).request.url
-                            )
-                        )?.store['ws']
+                        const url = (ws?.data as unknown as Context).request.url
+                        const index = url.indexOf('?')
 
-                        if (route && route.open) route.open(ws)
+                        const route = app.websocketRouter.find(
+                            getPath(url, index),
+                            index
+                        )?.store['subscribe']
+
+                        if (route && route.open)
+                            route.open(new ElysiaWS(ws as any))
                     },
-                    message(ws, message) {
+                    message(ws, message): void {
                         if (!ws.data) return
 
+                        const url = (ws?.data as unknown as Context).request.url
+                        const index = url.indexOf('?')
+
                         const route = app.websocketRouter.find(
-                            getPath(
-                                (ws?.data as unknown as Context).request.url
-                            )
-                        )?.store['ws']
+                            getPath(url, index),
+                            index
+                        )?.store['subscribe']
 
-                        if (route && route.message) {
-                            message = message.toString()
+                        if (!route?.message) return
 
+                        message = message.toString()
+                        const start = message.charCodeAt(0)
+
+                        if (start === 47 || start === 123)
                             try {
                                 message = JSON.parse(message)
-                            } catch (error) {
-                            }
+                            } catch (error) {}
 
-                            if (
-                                (ws.data as ElysiaWebSocket['data']).message &&
-                                (
-                                    ws.data as ElysiaWebSocket['data']
-                                ).message?.Check(message)
+                        if (
+                            (ws.data as ElysiaWSContext['data']).message?.Check(
+                                message
+                            ) === false
+                        )
+                            return void route.message(
+                                createValidationError(
+                                    'message',
+                                    (ws.data as ElysiaWSContext['data'])
+                                        .message,
+                                    message
+                                ).cause as string
                             )
-                                return void ws.send(
-                                    createValidationError(
-                                        'message',
-                                        (ws.data as ElysiaWebSocket['data'])
-                                            .message,
-                                        message
-                                    ).cause as string
-                                )
 
-                            route.message(ws, message)
-                        }
-
-                        // ? noImplicitReturns
-                        return undefined
+                        route.message(new ElysiaWS(ws as any), message)
                     },
                     close(ws, code, reason) {
                         if (!ws.data) return
 
-                        const route = app.websocketRouter.find(
-                            getPath(
-                                (ws?.data as unknown as Context).request.url
-                            )
-                        )?.store['ws']
+                        const queryIndex = (
+                            ws?.data as unknown as Context
+                        ).request.url.indexOf('?')
 
-                        if (route && route.close) route.close(ws, code, reason)
+                        const url = (ws?.data as unknown as Context).request.url
+                        const index = url.indexOf('?')
+
+                        const route = app.websocketRouter.find(
+                            getPath(url, index),
+                            index
+                        )?.store['subscribe']
+
+                        if (route && route.close)
+                            route.close(new ElysiaWS(ws as any), code, reason)
                     },
                     drain(ws) {
                         if (!ws.data) return
 
-                        const route = app.websocketRouter.find(
-                            getPath(
-                                (ws?.data as unknown as Context).request.url
-                            )
-                        )?.store['ws']
+                        const url = (ws?.data as unknown as Context).request.url
+                        const index = url.indexOf('?')
 
-                        if (route && route.drain) route.drain(ws)
+                        const route = app.websocketRouter.find(
+                            getPath(url, index),
+                            index
+                        )?.store['subscribe']
+
+                        if (route && route.drain)
+                            route.drain(new ElysiaWS(ws as any))
                     }
                 }
             }
@@ -116,15 +191,13 @@ export const websocket =
         return app
     }
 
+// @ts-ignore
 Elysia.prototype.ws = function (path, options) {
-    if (!this.websocketRouter)
-        throw new Error(
-            "Can't find WebSocket. Please register WebSocket plugin first"
-        )
+    if (!this.websocketRouter) this.websocketRouter = new Router()
 
-    this.websocketRouter.register(path)['ws'] = options
+    this.websocketRouter.register(path)['subscribe'] = options
 
-    this.get(
+    return this.get(
         path,
         (context) => {
             if (
@@ -136,8 +209,8 @@ Elysia.prototype.ws = function (path, options) {
                     data: {
                         ...context,
                         id: nanoid(),
-                        message: getSchemaValidator(options.schema?.message)
-                    } as ElysiaWebSocket['data']
+                        message: getSchemaValidator(options.schema?.body)
+                    } as ElysiaWSContext['data']
                 })
             )
                 return
@@ -155,8 +228,6 @@ Elysia.prototype.ws = function (path, options) {
             }
         }
     )
-
-    return this
 }
 
 export default websocket

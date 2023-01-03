@@ -2,7 +2,6 @@ import { Elysia, t } from 'elysia'
 import { websocket } from '../src/index'
 
 const app = new Elysia()
-    .use(websocket())
     .get('/', () => Bun.file('./example/ws.html'))
     // Simple WebSocket
     .ws('/ws', {
@@ -13,27 +12,27 @@ const app = new Elysia()
     // Simple chatroom with custom room id and name
     .ws('/ws/:room/:name', {
         schema: {
-            message: t.Object({
+            body: t.Object({
                 message: t.String()
+            }),
+            response: t.Object({
+                user: t.String(),
+                message: t.String(),
+                time: t.Number()
             })
         },
         open(ws) {
             const {
                 data: {
                     params: { room, name }
-                },
+                }
             } = ws
 
-            ws.subscribe(room)
-
-            ws.publish(
-                room,
-                JSON.stringify({
-                    message: `${name} has entered the room`,
-                    user: '[SYSTEM]',
-                    time: Date.now()
-                })
-            )
+            ws.subscribe(room).publish(room, {
+                message: `${name} has entered the room`,
+                user: '[SYSTEM]',
+                time: Date.now()
+            })
         },
         message(ws, { message }) {
             const {
@@ -42,14 +41,11 @@ const app = new Elysia()
                 }
             } = ws
 
-            ws.publish(
-                room,
-                JSON.stringify({
-                    message,
-                    user: name,
-                    time: Date.now()
-                })
-            )
+            ws.publish(room, {
+                message,
+                user: name,
+                time: Date.now()
+            })
         },
         close(ws) {
             const {
@@ -58,14 +54,11 @@ const app = new Elysia()
                 }
             } = ws
 
-            ws.publish(
-                room,
-                JSON.stringify({
-                    message: `${name} has leave the room`,
-                    user: '[SYSTEM]',
-                    time: Date.now()
-                })
-            )
+            ws.publish(room, {
+                message: `${name} has leave the room`,
+                user: '[SYSTEM]',
+                time: Date.now()
+            })
         }
     })
     .listen(8080, ({ hostname, port }) => {
