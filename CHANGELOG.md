@@ -1,3 +1,8 @@
+# 0.2.1 - 3 Jan 2023
+Bug fix:
+- WebSocket doesn't response if incoming message is invalid
+- Enable websocket not registered warning
+
 # 0.2.0 - 3 Jan 2023
 Feature:
 - Type-safe WebSocket validation

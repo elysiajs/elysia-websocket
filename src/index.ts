@@ -98,6 +98,8 @@ export const websocket =
     (app: Elysia) => {
         if (!app.websocketRouter) app.websocketRouter = new Router()
 
+        const router = app.websocketRouter
+
         if (!app.config.serve)
             app.config.serve = {
                 websocket: {
@@ -108,10 +110,8 @@ export const websocket =
                         const url = (ws?.data as unknown as Context).request.url
                         const index = url.indexOf('?')
 
-                        const route = app.websocketRouter.find(
-                            getPath(url, index),
-                            index
-                        )?.store['subscribe']
+                        const route = router.find(getPath(url, index), index)
+                            ?.store['subscribe']
 
                         if (route && route.open)
                             route.open(new ElysiaWS(ws as any))
@@ -122,10 +122,8 @@ export const websocket =
                         const url = (ws?.data as unknown as Context).request.url
                         const index = url.indexOf('?')
 
-                        const route = app.websocketRouter.find(
-                            getPath(url, index),
-                            index
-                        )?.store['subscribe']
+                        const route = router.find(getPath(url, index), index)
+                            ?.store['subscribe']
 
                         if (!route?.message) return
 
@@ -142,7 +140,7 @@ export const websocket =
                                 message
                             ) === false
                         )
-                            return void route.message(
+                            return void ws.send(
                                 createValidationError(
                                     'message',
                                     (ws.data as ElysiaWSContext['data'])
@@ -163,10 +161,8 @@ export const websocket =
                         const url = (ws?.data as unknown as Context).request.url
                         const index = url.indexOf('?')
 
-                        const route = app.websocketRouter.find(
-                            getPath(url, index),
-                            index
-                        )?.store['subscribe']
+                        const route = router.find(getPath(url, index), index)
+                            ?.store['subscribe']
 
                         if (route && route.close)
                             route.close(new ElysiaWS(ws as any), code, reason)
@@ -177,10 +173,8 @@ export const websocket =
                         const url = (ws?.data as unknown as Context).request.url
                         const index = url.indexOf('?')
 
-                        const route = app.websocketRouter.find(
-                            getPath(url, index),
-                            index
-                        )?.store['subscribe']
+                        const route = router.find(getPath(url, index), index)
+                            ?.store['subscribe']
 
                         if (route && route.drain)
                             route.drain(new ElysiaWS(ws as any))
@@ -193,7 +187,10 @@ export const websocket =
 
 // @ts-ignore
 Elysia.prototype.ws = function (path, options) {
-    if (!this.websocketRouter) this.websocketRouter = new Router()
+    if (!this.websocketRouter)
+        throw new Error(
+            "Can't find WebSocket. Please register WebSocket plugin first"
+        )
 
     this.websocketRouter.register(path)['subscribe'] = options
 

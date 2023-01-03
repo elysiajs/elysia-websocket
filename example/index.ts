@@ -2,6 +2,7 @@ import { Elysia, t } from 'elysia'
 import { websocket } from '../src/index'
 
 const app = new Elysia()
+    .use(websocket())
     .get('/', () => Bun.file('./example/ws.html'))
     // Simple WebSocket
     .ws('/ws', {
@@ -59,6 +60,21 @@ const app = new Elysia()
                 user: '[SYSTEM]',
                 time: Date.now()
             })
+        }
+    })
+    .ws('/my/ws', {
+        schema: {
+            body: t.Object({
+                name: t.String(),
+                message: t.String()
+            }),
+            response: t.Object({
+                name: t.String(),
+                message: t.String()
+            })
+        },
+        message(ws, message) {
+            ws.send(message)
         }
     })
     .listen(8080, ({ hostname, port }) => {
