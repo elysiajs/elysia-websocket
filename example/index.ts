@@ -62,19 +62,16 @@ const app = new Elysia()
             })
         }
     })
-    .ws('/my/ws', {
-        schema: {
-            body: t.Object({
-                name: t.String(),
-                message: t.String()
-            }),
-            response: t.Object({
-                name: t.String(),
-                message: t.String()
-            })
-        },
+    .ws('/ws/number', {
         message(ws, message) {
-            ws.send(message)
+            ws.send(message + 1)
+        },
+        transform() {},
+        transformMessage(message) {
+            return +message
+        },
+        schema: {
+            body: t.Number()
         }
     })
     .listen(8080, ({ hostname, port }) => {

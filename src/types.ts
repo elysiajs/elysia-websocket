@@ -13,7 +13,8 @@ import type {
     TypedSchemaToRoute,
     WithArray,
     ElysiaRoute,
-    ElysiaInstance
+    ElysiaInstance,
+    NoReturnHandler
 } from 'elysia/dist/types'
 
 import type { Static, TSchema } from '@sinclair/typebox'
@@ -38,6 +39,10 @@ export type WebSocketSchemaToRoute<Schema extends TypedSchema> = {
         : undefined
 }
 
+export type TransformMessageHandler<Message extends TSchema | undefined> = (
+    message: UnwrapSchema<Message>
+) => void | UnwrapSchema<Message>
+
 export type ElysiaWSContext<
     Schema extends TypedSchema = TypedSchema,
     Path extends string = string
@@ -53,6 +58,7 @@ export type ElysiaWSContext<
         message: Schema['body'] extends undefined
             ? undefined
             : TypeCheck<NonNullable<Schema['body']>>
+        transformMessage: TransformMessageHandler<Schema['body']>[]
     }
 >
 
@@ -96,7 +102,13 @@ declare module 'elysia' {
                 'open' | 'message' | 'close' | 'drain'
             > & {
                 schema?: Schema
+
                 beforeHandle?: WithArray<HookHandler<Schema>>
+                transform?: WithArray<NoReturnHandler<Schema>>
+                transformMessage?: WithArray<
+                    TransformMessageHandler<Schema['body']>
+                >
+
                 /**
                  * Headers to register to websocket before `upgrade`
                  */

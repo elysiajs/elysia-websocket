@@ -135,6 +135,20 @@ export const websocket =
                                 message = JSON.parse(message)
                             } catch (error) {}
 
+                        for (
+                            let i = 0;
+                            i <
+                            (ws.data as ElysiaWSContext['data'])
+                                .transformMessage.length;
+                            i++
+                        ) {
+                            const temp: any = (
+                                ws.data as ElysiaWSContext['data']
+                            ).transformMessage[i](message)
+
+                            if (temp !== undefined) message = temp
+                        }
+
                         if (
                             (ws.data as ElysiaWSContext['data']).message?.Check(
                                 message
@@ -206,7 +220,12 @@ Elysia.prototype.ws = function (path, options) {
                     data: {
                         ...context,
                         id: nanoid(),
-                        message: getSchemaValidator(options.schema?.body)
+                        message: getSchemaValidator(options.schema?.body),
+                        transformMessage: Array.isArray(
+                            options.transformMessage
+                        )
+                            ? options.transformMessage
+                            : [options.transformMessage]
                     } as ElysiaWSContext['data']
                 })
             )
@@ -218,6 +237,7 @@ Elysia.prototype.ws = function (path, options) {
         },
         {
             beforeHandle: options.beforeHandle,
+            transform: options.transform,
             schema: {
                 headers: options.schema?.headers,
                 params: options.schema?.params,
