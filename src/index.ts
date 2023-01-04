@@ -135,23 +135,25 @@ export const websocket =
                                 message = JSON.parse(message)
                             } catch (error) {}
 
-                        if (
+                        for (
+                            let i = 0;
+                            i <
                             (ws.data as ElysiaWSContext['data'])
-                                .transformMessage
-                        )
-                            for (
-                                let i = 0;
-                                i <
+                                .transformMessage.length;
+                            i++
+                        ) {
+                            console.log(
                                 (ws.data as ElysiaWSContext['data'])
-                                    .transformMessage.length;
-                                i++
-                            ) {
-                                const temp: any = (
-                                    ws.data as ElysiaWSContext['data']
-                                ).transformMessage[i](message)
+                                    .transformMessage,
+                                i
+                            )
 
-                                if (temp !== undefined) message = temp
-                            }
+                            const temp: any = (
+                                ws.data as ElysiaWSContext['data']
+                            ).transformMessage[i](message)
+
+                            if (temp !== undefined) message = temp
+                        }
 
                         if (
                             (ws.data as ElysiaWSContext['data']).message?.Check(
@@ -225,9 +227,9 @@ Elysia.prototype.ws = function (path, options) {
                         ...context,
                         id: nanoid(),
                         message: getSchemaValidator(options.schema?.body),
-                        transformMessage: Array.isArray(
-                            options.transformMessage
-                        )
+                        transformMessage: !options.transform
+                            ? []
+                            : Array.isArray(options.transformMessage)
                             ? options.transformMessage
                             : [options.transformMessage]
                     } as ElysiaWSContext['data']
