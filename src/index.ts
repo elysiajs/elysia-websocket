@@ -135,19 +135,23 @@ export const websocket =
                                 message = JSON.parse(message)
                             } catch (error) {}
 
-                        for (
-                            let i = 0;
-                            i <
+                        if (
                             (ws.data as ElysiaWSContext['data'])
-                                .transformMessage.length;
-                            i++
-                        ) {
-                            const temp: any = (
-                                ws.data as ElysiaWSContext['data']
-                            ).transformMessage[i](message)
+                                .transformMessage
+                        )
+                            for (
+                                let i = 0;
+                                i <
+                                (ws.data as ElysiaWSContext['data'])
+                                    .transformMessage.length;
+                                i++
+                            ) {
+                                const temp: any = (
+                                    ws.data as ElysiaWSContext['data']
+                                ).transformMessage[i](message)
 
-                            if (temp !== undefined) message = temp
-                        }
+                                if (temp !== undefined) message = temp
+                            }
 
                         if (
                             (ws.data as ElysiaWSContext['data']).message?.Check(

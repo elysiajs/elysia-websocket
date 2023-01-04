@@ -1,3 +1,7 @@
+# 0.2.3 - 4 Jan 2023
+Bug fix:
+- Make `transformMessage` optional
+
 # 0.2.2 - 4 Jan 2023
 Feature:
 - Add `transform`, and `transformMessage`
