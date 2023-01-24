@@ -5,7 +5,9 @@ import type {
     TypedSchema,
     HookHandler,
     UnwrapSchema,
-    Router
+    Router,
+    SCHEMA,
+    Elysia
 } from 'elysia'
 import type {
     ExtractPath,
@@ -14,14 +16,88 @@ import type {
     WithArray,
     ElysiaRoute,
     ElysiaInstance,
-    NoReturnHandler
+    NoReturnHandler,
+    TypedRouteToEden,
+    AnyTypedSchema
 } from 'elysia/dist/types'
+import type { ElysiaWS } from '.'
 
 import type { Static, TSchema } from '@sinclair/typebox'
 import type { TypeCheck } from '@sinclair/typebox/compiler'
-import { ElysiaWS } from '.'
 
-export type WebSocketSchemaToRoute<Schema extends TypedSchema> = {
+export type WSTypedSchema<ModelName extends string = string> = Omit<
+    TypedSchema<ModelName>,
+    'response'
+> & {
+    response?: TSchema | ModelName | undefined
+}
+
+export type ElysiaWSRoute<
+    Method extends string = string,
+    Schema extends TypedSchema = TypedSchema,
+    Instance extends ElysiaInstance = ElysiaInstance,
+    Path extends string = string,
+    CatchResponse = unknown
+> = Elysia<{
+    request: Instance['request']
+    store: Instance['store'] & {
+        [SCHEMA]: {
+            [path in Path]: {
+                [method in Method]: TypedSchemaToRoute<
+                    Schema,
+                    Instance
+                > extends infer FinalSchema extends AnyTypedSchema
+                    ? Omit<FinalSchema, 'response'> & {
+                          response: undefined extends FinalSchema['response']
+                              ? CatchResponse
+                              : FinalSchema['response']
+                      }
+                    : never
+            }
+        }
+    }
+    schema: Instance['schema']
+}>
+
+export type TypedWSSchemaToRoute<
+    Schema extends WSTypedSchema = WSTypedSchema,
+    Instance extends ElysiaInstance = ElysiaInstance
+> = {
+    body: UnwrapSchema<Schema['body'], Instance>
+    headers: UnwrapSchema<
+        Schema['headers'],
+        Instance
+    > extends infer Result extends Record<string, any>
+        ? Result
+        : undefined
+    query: UnwrapSchema<
+        Schema['query'],
+        Instance
+    > extends infer Result extends Record<string, any>
+        ? Result
+        : undefined
+    params: UnwrapSchema<
+        Schema['params'],
+        Instance
+    > extends infer Result extends Record<string, any>
+        ? Result
+        : undefined
+    response: UnwrapSchema<
+        Schema['params'],
+        Instance
+    > extends infer Result extends Record<string, any>
+        ? Result
+        : undefined
+}
+
+export type WSTypedSchemaToTypedSchema<Schema extends WSTypedSchema> = Omit<
+    Schema,
+    'response'
+> & {
+    response: Schema['response']
+}
+
+export type WebSocketSchemaToRoute<Schema extends WSTypedSchema> = {
     body: UnwrapSchema<Schema['body']> extends Record<string, any>
         ? UnwrapSchema<Schema['body']>
         : undefined
@@ -39,12 +115,12 @@ export type WebSocketSchemaToRoute<Schema extends TypedSchema> = {
         : undefined
 }
 
-export type TransformMessageHandler<Message extends TSchema | undefined> = (
-    message: UnwrapSchema<Message>
-) => void | UnwrapSchema<Message>
+export type TransformMessageHandler<
+    Message extends TSchema | string | undefined
+> = (message: UnwrapSchema<Message>) => void | UnwrapSchema<Message>
 
 export type ElysiaWSContext<
-    Schema extends TypedSchema = TypedSchema,
+    Schema extends WSTypedSchema = WSTypedSchema,
     Path extends string = string
 > = ServerWebSocket<
     Context<
@@ -57,7 +133,11 @@ export type ElysiaWSContext<
         id: string
         message: Schema['body'] extends undefined
             ? undefined
-            : TypeCheck<NonNullable<Schema['body']>>
+            : TypeCheck<
+                  NonNullable<Schema['body']> extends TSchema
+                      ? NonNullable<Schema['body']>
+                      : TSchema
+              >
         transformMessage: TransformMessageHandler<Schema['body']>[]
     }
 >
@@ -67,16 +147,16 @@ export type HeaderHandler<Route extends TypedRoute = TypedRoute> = (
 ) => HeadersInit
 
 export type WebSocketHeaderHandler<
-    Schema extends TypedSchema = TypedSchema,
+    Schema extends WSTypedSchema = WSTypedSchema,
     Path extends string = string
 > = HeaderHandler<
-    TypedSchemaToRoute<Schema>['params'] extends {}
-        ? Omit<TypedSchemaToRoute<Schema>, 'response'> & {
-              response: void | TypedSchemaToRoute<Schema>['response']
+    TypedWSSchemaToRoute<Schema>['params'] extends {}
+        ? Omit<TypedWSSchemaToRoute<Schema>, 'response'> & {
+              response: void | TypedWSSchemaToRoute<Schema>['response']
           }
         : Omit<
-              Omit<TypedSchemaToRoute<Schema>, 'response'> & {
-                  response: void | TypedSchemaToRoute<Schema>['response']
+              Omit<TypedWSSchemaToRoute<Schema>, 'response'> & {
+                  response: void | TypedWSSchemaToRoute<Schema>['response']
               },
               'params'
           > & {
@@ -89,7 +169,7 @@ declare module 'elysia' {
         websocketRouter: Router
 
         ws<
-            Schema extends TypedSchema = TypedSchema,
+            Schema extends WSTypedSchema = WSTypedSchema,
             Path extends string = string,
             Instance extends Elysia<any> = this
         >(
@@ -104,7 +184,9 @@ declare module 'elysia' {
                 schema?: Schema
 
                 beforeHandle?: WithArray<HookHandler<Schema>>
-                transform?: WithArray<NoReturnHandler<Schema>>
+                transform?: WithArray<
+                    NoReturnHandler<TypedWSSchemaToRoute<Schema>>
+                >
                 transformMessage?: WithArray<
                     TransformMessageHandler<Schema['body']>
                 >
@@ -134,7 +216,7 @@ declare module 'elysia' {
                 message?: (
                     ws: ElysiaWS<ElysiaWSContext<Schema, Path>, Schema>,
                     message: Schema['body'] extends NonNullable<Schema['body']>
-                        ? Static<NonNullable<Schema['body']>>
+                        ? UnwrapSchema<Schema['body']>
                         : string
                 ) => any
 
@@ -160,7 +242,7 @@ declare module 'elysia' {
                 ) => any
             }
         ): Instance extends Elysia<infer Instance>
-            ? ElysiaRoute<
+            ? ElysiaWSRoute<
                   'subscribe',
                   Schema,
                   Instance,

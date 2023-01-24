@@ -1,4 +1,4 @@
-import { Elysia, t } from 'elysia'
+import { Elysia, SCHEMA, t } from 'elysia'
 import { websocket } from '../src/index'
 
 const app = new Elysia()
@@ -10,7 +10,26 @@ const app = new Elysia()
             ws.send(message)
         }
     })
+    .get('/publish/:id', ({ publish, params: { id } }) => {
+        publish(
+            id,
+            JSON.stringify({
+                message: 'Hi',
+                user: 'System',
+                time: Date.now()
+            })
+        )
+
+        return `Publish to ${id}`
+    })
     // Simple chatroom with custom room id and name
+    .setModel({
+        'chat.response': t.Object({
+            user: t.String(),
+            message: t.String(),
+            time: t.Number()
+        })
+    })
     .ws('/ws/:room/:name', {
         schema: {
             body: t.Object({

@@ -1,4 +1,4 @@
-import type { ServerWebSocket, WebSocketHandler } from 'bun'
+import type { Server, ServerWebSocket, WebSocketHandler } from 'bun'
 
 import {
     Elysia,
@@ -6,18 +6,21 @@ import {
     Router,
     createValidationError,
     getSchemaValidator,
+    DEFS,
     type Context,
     type TypedSchema,
-    UnwrapSchema
+    type UnwrapSchema,
+    ElysiaInstance
 } from 'elysia'
 import { nanoid } from 'nanoid'
 
 import type { TSchema } from '@sinclair/typebox'
-import type { ElysiaWSContext } from './types'
+import type { ElysiaWSContext, WSTypedSchema } from './types'
 
 export class ElysiaWS<
     WS extends ElysiaWSContext<any> = ElysiaWSContext,
-    Schema extends TypedSchema = TypedSchema
+    Schema extends WSTypedSchema = WSTypedSchema,
+    Instance extends ElysiaInstance = ElysiaInstance
 > {
     raw: WS
     data: WS['data']
@@ -31,7 +34,7 @@ export class ElysiaWS<
 
     publish(
         topic: string,
-        data: UnwrapSchema<Schema['response']>,
+        data: UnwrapSchema<Schema['response'], Instance>,
         compress?: boolean
     ) {
         // @ts-ignore
@@ -42,7 +45,7 @@ export class ElysiaWS<
         return this
     }
 
-    send(data: UnwrapSchema<Schema['response']>) {
+    send(data: UnwrapSchema<Schema['response'], Instance>) {
         // @ts-ignore
         if (typeof data === 'object') data = JSON.stringify(data)
 
@@ -203,6 +206,10 @@ export const websocket =
             }
 
         return app
+            .decorate('publish', app.server?.publish as Server['publish'])
+            .onRequest((context) => {
+                if (app.server) context.publish = app.server!.publish
+            })
     }
 
 // @ts-ignore
@@ -226,7 +233,10 @@ Elysia.prototype.ws = function (path, options) {
                     data: {
                         ...context,
                         id: nanoid(),
-                        message: getSchemaValidator(options.schema?.body),
+                        message: getSchemaValidator(
+                            options.schema?.body,
+                            this.store[DEFS]
+                        ),
                         transformMessage: !options.transform
                             ? []
                             : Array.isArray(options.transformMessage)

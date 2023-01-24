@@ -1,3 +1,11 @@
+# 0.2.6-rc.0 - 24 Jan 2023
+Change:
+- Set minimum support for Elysia 0.2.0-rc.1
+
+# 0.2.5 - 20 Jan 2023
+Feature:
+- Attach publish to `context`
+
 # 0.2.4 - 4 Jan 2023
 Bug fix:
 - Make `transformMessage` optional
