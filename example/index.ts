@@ -3,11 +3,17 @@ import { websocket } from '../src/index'
 
 const app = new Elysia()
     .use(websocket())
+    .setModel({
+        "a": t.Number()
+    })
     .get('/', () => Bun.file('./example/ws.html'))
     // Simple WebSocket
     .ws('/ws', {
         message(ws, message) {
-            ws.send(message)
+        },
+        schema: {
+            "body": 'a',
+            "response": "a"
         }
     })
     .get('/publish/:id', ({ publish, params: { id } }) => {

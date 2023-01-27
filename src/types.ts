@@ -7,7 +7,8 @@ import type {
     UnwrapSchema,
     Router,
     SCHEMA,
-    Elysia
+    Elysia,
+    DEFS
 } from 'elysia'
 import type {
     ExtractPath,
@@ -169,9 +170,15 @@ declare module 'elysia' {
         websocketRouter: Router
 
         ws<
-            Schema extends WSTypedSchema = WSTypedSchema,
-            Path extends string = string,
-            Instance extends Elysia<any> = this
+            Instance extends ElysiaInstance = this extends Elysia<infer Inner>
+                ? Inner
+                : ElysiaInstance,
+            ModelName extends string = Exclude<
+                keyof Instance['store'][typeof DEFS],
+                number | symbol
+            >,
+            Schema extends WSTypedSchema<ModelName> = WSTypedSchema<ModelName>,
+            Path extends string = string
         >(
             /**
              * Path to register websocket to
@@ -202,7 +209,11 @@ declare module 'elysia' {
                  * @param ws The {@link ServerWebSocket} that was opened
                  */
                 open?: (
-                    ws: ElysiaWS<ElysiaWSContext<Schema, Path>, Schema>
+                    ws: ElysiaWS<
+                        ElysiaWSContext<Schema, Path>,
+                        Schema,
+                        Instance
+                    >
                 ) => void | Promise<void>
 
                 /**
@@ -214,10 +225,12 @@ declare module 'elysia' {
                  * To change `message` to be an `ArrayBuffer` instead of a `Uint8Array`, set `ws.binaryType = "arraybuffer"`
                  */
                 message?: (
-                    ws: ElysiaWS<ElysiaWSContext<Schema, Path>, Schema>,
-                    message: Schema['body'] extends NonNullable<Schema['body']>
-                        ? UnwrapSchema<Schema['body']>
-                        : string
+                    ws: ElysiaWS<
+                        ElysiaWSContext<Schema, Path>,
+                        Schema,
+                        Instance
+                    >,
+                    message: UnwrapSchema<Schema['body'], Instance, string>
                 ) => any
 
                 /**
@@ -227,7 +240,11 @@ declare module 'elysia' {
                  * @param message The close message
                  */
                 close?: (
-                    ws: ElysiaWS<ElysiaWSContext<Schema, Path>, Schema>
+                    ws: ElysiaWS<
+                        ElysiaWSContext<Schema, Path>,
+                        Schema,
+                        Instance
+                    >
                 ) => any
 
                 /**
@@ -236,19 +253,21 @@ declare module 'elysia' {
                  * @param ws The {@link ServerWebSocket} that is ready
                  */
                 drain?: (
-                    ws: ElysiaWS<ElysiaWSContext<Schema, Path>, Schema>,
+                    ws: ElysiaWS<
+                        ElysiaWSContext<Schema, Path>,
+                        Schema,
+                        Instance
+                    >,
                     code: number,
                     reason: string
                 ) => any
             }
-        ): Instance extends Elysia<infer Instance>
-            ? ElysiaWSRoute<
-                  'subscribe',
-                  Schema,
-                  Instance,
-                  Path,
-                  Schema['response']
-              >
-            : this
+        ): ElysiaWSRoute<
+            'subscribe',
+            Schema,
+            Instance,
+            Path,
+            Schema['response']
+        >
     }
 }

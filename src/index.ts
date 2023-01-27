@@ -10,7 +10,7 @@ import {
     type Context,
     type TypedSchema,
     type UnwrapSchema,
-    ElysiaInstance
+    type ElysiaInstance
 } from 'elysia'
 import { nanoid } from 'nanoid'
 
@@ -25,6 +25,7 @@ export class ElysiaWS<
     raw: WS
     data: WS['data']
     isSubscribed: WS['isSubscribed']
+    ref?: NonNullable<Instance['store'][typeof DEFS]>
 
     constructor(ws: WS) {
         this.raw = ws
@@ -223,6 +224,7 @@ Elysia.prototype.ws = function (path, options) {
 
     return this.get(
         path,
+        // @ts-ignore
         (context) => {
             if (
                 this.server!.upgrade(context.request, {

@@ -1,3 +1,7 @@
+# 0.2.7 - 27 Jan 2023
+Improvement:
+- Add support for reference model for WebSocket schema
+
 # 0.2.6-rc.0 - 24 Jan 2023
 Change:
 - Set minimum support for Elysia 0.2.0-rc.1
