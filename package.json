@@ -1,6 +1,6 @@
 {
   "name": "@elysiajs/websocket",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "description": "Plugin for Elysia that add support for websocket",
   "author": {
     "name": "saltyAom",
