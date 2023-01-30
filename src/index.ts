@@ -2,8 +2,6 @@ import type { Server, ServerWebSocket, WebSocketHandler } from 'bun'
 
 import {
     Elysia,
-    getPath,
-    Router,
     createValidationError,
     getSchemaValidator,
     DEFS,
@@ -12,10 +10,16 @@ import {
     type UnwrapSchema,
     type ElysiaInstance
 } from 'elysia'
+import { Raikiri } from 'raikiri'
 import { nanoid } from 'nanoid'
 
 import type { TSchema } from '@sinclair/typebox'
 import type { ElysiaWSContext, WSTypedSchema } from './types'
+
+export const mapPathnameAndQueryRegEx = /:\/\/[^/]+([^#?]+)(?:\?([^#]+))?/
+
+const getPath = (path: string) =>
+    path.match(mapPathnameAndQueryRegEx)?.[1] ?? '/'
 
 export class ElysiaWS<
     WS extends ElysiaWSContext<any> = ElysiaWSContext,
@@ -100,7 +104,7 @@ export class ElysiaWS<
 export const websocket =
     (config?: Omit<WebSocketHandler, 'open' | 'message' | 'close' | 'drain'>) =>
     (app: Elysia) => {
-        if (!app.websocketRouter) app.websocketRouter = new Router()
+        if (!app.websocketRouter) app.websocketRouter = new Raikiri()
 
         const router = app.websocketRouter
 
@@ -114,20 +118,24 @@ export const websocket =
                         const url = (ws?.data as unknown as Context).request.url
                         const index = url.indexOf('?')
 
-                        const route = router.find(getPath(url, index), index)
-                            ?.store['subscribe']
+                        const route = router.match(
+                            'subscribe',
+                            getPath(url)
+                        )?.store
 
                         if (route && route.open)
                             route.open(new ElysiaWS(ws as any))
                     },
-                    message(ws, message): void {
+                    message(ws, message: any): void {
                         if (!ws.data) return
 
                         const url = (ws?.data as unknown as Context).request.url
                         const index = url.indexOf('?')
 
-                        const route = router.find(getPath(url, index), index)
-                            ?.store['subscribe']
+                        const route = router.match(
+                            'subscribe',
+                            getPath(url)
+                        )?.store
 
                         if (!route?.message) return
 
@@ -138,6 +146,7 @@ export const websocket =
                             try {
                                 message = JSON.parse(message)
                             } catch (error) {}
+                        else if (!Number.isNaN(+message)) message = +message
 
                         for (
                             let i = 0;
@@ -146,12 +155,6 @@ export const websocket =
                                 .transformMessage.length;
                             i++
                         ) {
-                            console.log(
-                                (ws.data as ElysiaWSContext['data'])
-                                    .transformMessage,
-                                i
-                            )
-
                             const temp: any = (
                                 ws.data as ElysiaWSContext['data']
                             ).transformMessage[i](message)
@@ -185,8 +188,10 @@ export const websocket =
                         const url = (ws?.data as unknown as Context).request.url
                         const index = url.indexOf('?')
 
-                        const route = router.find(getPath(url, index), index)
-                            ?.store['subscribe']
+                        const route = router.match(
+                            'subscribe',
+                            getPath(url)
+                        )?.store
 
                         if (route && route.close)
                             route.close(new ElysiaWS(ws as any), code, reason)
@@ -197,8 +202,10 @@ export const websocket =
                         const url = (ws?.data as unknown as Context).request.url
                         const index = url.indexOf('?')
 
-                        const route = router.find(getPath(url, index), index)
-                            ?.store['subscribe']
+                        const route = router.match(
+                            'subscribe',
+                            getPath(url)
+                        )?.store
 
                         if (route && route.drain)
                             route.drain(new ElysiaWS(ws as any))
@@ -220,7 +227,7 @@ Elysia.prototype.ws = function (path, options) {
             "Can't find WebSocket. Please register WebSocket plugin first"
         )
 
-    this.websocketRouter.register(path)['subscribe'] = options
+    this.websocketRouter.add('subscribe', path, options)
 
     return this.get(
         path,

@@ -10,6 +10,9 @@ const app = new Elysia()
     // Simple WebSocket
     .ws('/ws', {
         message(ws, message) {
+            console.log(message)
+
+            ws.send(message)
         },
         schema: {
             "body": 'a',

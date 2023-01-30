@@ -1,3 +1,9 @@
+# 0.2.8 - 30 Jan 2023
+Improvement:
+- Migrate to Raikiri
+- Remove console.log
+- Add support for auto-mapping number
+
 # 0.2.7 - 27 Jan 2023
 Improvement:
 - Add support for reference model for WebSocket schema

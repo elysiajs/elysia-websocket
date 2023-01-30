@@ -5,7 +5,6 @@ import type {
     TypedSchema,
     HookHandler,
     UnwrapSchema,
-    Router,
     SCHEMA,
     Elysia,
     DEFS
@@ -22,6 +21,8 @@ import type {
     AnyTypedSchema
 } from 'elysia/dist/types'
 import type { ElysiaWS } from '.'
+
+import type { Raikiri } from 'raikiri'
 
 import type { Static, TSchema } from '@sinclair/typebox'
 import type { TypeCheck } from '@sinclair/typebox/compiler'
@@ -167,7 +168,7 @@ export type WebSocketHeaderHandler<
 
 declare module 'elysia' {
     interface Elysia {
-        websocketRouter: Router
+        websocketRouter: Raikiri<any>
 
         ws<
             Instance extends ElysiaInstance = this extends Elysia<infer Inner>
