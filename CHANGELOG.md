@@ -1,3 +1,7 @@
+# 0.3.0-beta.0 - 25 Feb 2023
+Improvement:
+- Update to support Elysia 0.3
+
 # 0.2.8 - 30 Jan 2023
 Improvement:
 - Migrate to Raikiri

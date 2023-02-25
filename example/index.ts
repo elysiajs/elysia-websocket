@@ -4,7 +4,11 @@ import { websocket } from '../src/index'
 const app = new Elysia()
     .use(websocket())
     .setModel({
-        "a": t.Number()
+        'chat.response': t.Object({
+            user: t.String(),
+            message: t.String(),
+            time: t.Number()
+        })
     })
     .get('/', () => Bun.file('./example/ws.html'))
     // Simple WebSocket
@@ -13,10 +17,6 @@ const app = new Elysia()
             console.log(message)
 
             ws.send(message)
-        },
-        schema: {
-            "body": 'a',
-            "response": "a"
         }
     })
     .get('/publish/:id', ({ publish, params: { id } }) => {
@@ -31,24 +31,12 @@ const app = new Elysia()
 
         return `Publish to ${id}`
     })
-    // Simple chatroom with custom room id and name
-    .setModel({
-        'chat.response': t.Object({
-            user: t.String(),
-            message: t.String(),
-            time: t.Number()
-        })
-    })
     .ws('/ws/:room/:name', {
         schema: {
             body: t.Object({
                 message: t.String()
             }),
-            response: t.Object({
-                user: t.String(),
-                message: t.String(),
-                time: t.Number()
-            })
+            response: 'chat.response'
         },
         open(ws) {
             const {

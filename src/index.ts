@@ -244,7 +244,7 @@ Elysia.prototype.ws = function (path, options) {
                         id: nanoid(),
                         message: getSchemaValidator(
                             options.schema?.body,
-                            this.store[DEFS]
+                            this.meta[DEFS]
                         ),
                         transformMessage: !options.transform
                             ? []
