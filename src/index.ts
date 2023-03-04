@@ -2,14 +2,15 @@ import type { Server, ServerWebSocket, WebSocketHandler } from 'bun'
 
 import {
     Elysia,
+    DEFS,
     createValidationError,
     getSchemaValidator,
-    DEFS,
     type Context,
     type TypedSchema,
     type UnwrapSchema,
     type ElysiaInstance
 } from 'elysia'
+
 import { Raikiri } from 'raikiri'
 import { nanoid } from 'nanoid'
 
@@ -29,7 +30,6 @@ export class ElysiaWS<
     raw: WS
     data: WS['data']
     isSubscribed: WS['isSubscribed']
-    ref?: NonNullable<Instance['store'][typeof DEFS]>
 
     constructor(ws: WS) {
         this.raw = ws
