@@ -1,3 +1,11 @@
+# 0.3.0-beta.3 - 4 Mar 2023
+Improvement:
+- Optimize path declaration
+
+# 0.3.0-beta.2 - 4 Mar 2023
+Improvement:
+- Update to support Elysia 0.3.0-beta.6
+
 # 0.3.0-beta.1 - 4 Mar 2023
 Improvement:
 - Update to support Elysia 0.3.0-beta.6

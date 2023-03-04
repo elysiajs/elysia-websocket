@@ -17,20 +17,24 @@ import type {
     TypedSchemaToRoute,
     WithArray,
     NoReturnHandler,
-    AnyTypedSchema
+    AnyTypedSchema,
+    TypedRouteToEden
 } from 'elysia/dist/types'
-import type { ElysiaWS } from '.'
 
+import type { ElysiaWS } from '.'
 import type { Raikiri } from 'raikiri'
 
-import { TSchema, Static } from 'elysia/node_modules/@sinclair/typebox'
-import type { TypeCheck } from 'elysia/node_modules/@sinclair/typebox/compiler'
+// Mimick `@sinclair/typebox/compiler`.TypeCheck
+type TypeCheck = {
+    Errors(value: unknown): IterableIterator<unknown>
+    Check(value: unknown): unknown
+}
 
 export type WSTypedSchema<ModelName extends string = string> = Omit<
     TypedSchema<ModelName>,
     'response'
 > & {
-    response?: TSchema | ModelName | undefined
+    response?: TypedSchema<ModelName>['body']
 }
 
 export type ElysiaWSRoute<
@@ -137,9 +141,9 @@ export type WebSocketSchemaToRoute<
         : undefined
 }
 
-export type TransformMessageHandler<
-    Message extends TSchema | string | undefined
-> = (message: UnwrapSchema<Message>) => void | UnwrapSchema<Message>
+export type TransformMessageHandler<Message extends WSTypedSchema['body']> = (
+    message: UnwrapSchema<Message>
+) => void | UnwrapSchema<Message>
 
 export type ElysiaWSContext<
     Schema extends WSTypedSchema = WSTypedSchema,
@@ -153,13 +157,7 @@ export type ElysiaWSContext<
               }
     > & {
         id: string
-        message: Schema['body'] extends undefined
-            ? undefined
-            : TypeCheck<
-                  NonNullable<Schema['body']> extends TSchema
-                      ? NonNullable<Schema['body']>
-                      : TSchema
-              >
+        message: TypeCheck
         transformMessage: TransformMessageHandler<Schema['body']>[]
     }
 >
@@ -285,12 +283,24 @@ declare module 'elysia' {
                     reason: string
                 ) => any
             }
-        ): ElysiaWSRoute<
-            'subscribe',
-            Schema,
-            Instance,
-            Path,
-            Schema['response']
-        >
+        ): Elysia<{
+            request: Instance['request']
+            store: Instance['store']
+            schema: Instance['schema']
+            meta: Instance['meta'] &
+                Record<
+                    typeof SCHEMA,
+                    Record<
+                        Path,
+                        {
+                            [method in 'subscribe']: TypedRouteToEden<
+                                Schema,
+                                Instance['meta'][typeof DEFS],
+                                Path
+                            >
+                        }
+                    >
+                >
+        }>
     }
 }

@@ -171,7 +171,7 @@ export const websocket =
                                 createValidationError(
                                     'message',
                                     (ws.data as ElysiaWSContext['data'])
-                                        .message,
+                                        .message as any,
                                     message
                                 ).cause as string
                             )
