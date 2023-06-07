@@ -1,3 +1,5 @@
+WebSocket plugin is integrated to main Elysia package via `elysia/ws` since Elysia 0.3.0.
+
 # @elysiajs/websocket
 Plugin for [elysia](https://github.com/elysiajs/elysia) that add support for websocket.
 
